@@ -7,10 +7,21 @@ from models import *
 from train import train
 from utils.compute_args import compute_args
 
+
+def str2bool(v):
+    """string to boolean"""
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     # Model
-    parser.add_argument('--model', type=str, default="Model_MCAN")
+    parser.add_argument('--model', type=str, default="Model_MAT", choices=["Model_MAT", "Model_MNT", "Model_MIST"])
     parser.add_argument('--layer', type=int, default=4)
     parser.add_argument('--hidden_size', type=int, default=512)
     parser.add_argument('--dropout_i', type=float, default=0.0)
@@ -20,6 +31,11 @@ def parse_args():
     parser.add_argument('--ff_size', type=int, default=2048)
     parser.add_argument('--word_embed_size', type=int, default=300)
     parser.add_argument('--bidirectional', type=bool, default=False)
+    # MISA config
+    parser.add_argument('--use_bert', type=str2bool, default=True)
+    parser.add_argument('--use_cmd_sim', type=str2bool, default=True)
+    parser.add_argument('--dropout', type=float, default=0.5)
+    parser.add_argument('--rnncell', type=str, default='lstm')
 
     # Data
     parser.add_argument('--lang_seq_len', type=int, default=50)
