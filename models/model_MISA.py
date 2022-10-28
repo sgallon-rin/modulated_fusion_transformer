@@ -33,7 +33,6 @@ class ReverseLayerF(Function):
         return output, None
 
 
-# TODO: modify MISA
 # let's define a simple model that can deal with multimodal variable length sequence
 class Model_MISA(nn.Module):
     def __init__(self, args, vocab_size, pretrained_emb):
@@ -210,15 +209,15 @@ class Model_MISA(nn.Module):
             utterance_text = torch.cat((final_h1t, final_h2t), dim=2).permute(1, 0, 2).contiguous().view(batch_size, -1)
 
         # extract features from visual modality
-        final_h1v, final_h2v = self.extract_features(visual, lengths, self.vrnn1, self.vrnn2, self.vlayer_norm)
-        utterance_video = torch.cat((final_h1v, final_h2v), dim=2).permute(1, 0, 2).contiguous().view(batch_size, -1)
+        # final_h1v, final_h2v = self.extract_features(visual, lengths, self.vrnn1, self.vrnn2, self.vlayer_norm)
+        # utterance_video = torch.cat((final_h1v, final_h2v), dim=2).permute(1, 0, 2).contiguous().view(batch_size, -1)
 
         # extract features from acoustic modality
         final_h1a, final_h2a = self.extract_features(acoustic, lengths, self.arnn1, self.arnn2, self.alayer_norm)
         utterance_audio = torch.cat((final_h1a, final_h2a), dim=2).permute(1, 0, 2).contiguous().view(batch_size, -1)
 
         # Shared-private encoders
-        self.shared_private(utterance_text, utterance_video, utterance_audio)
+        self.shared_private(utterance_text, utterance_audio)
 
         if not self.args.use_cmd_sim:
             # discriminator
@@ -238,12 +237,12 @@ class Model_MISA(nn.Module):
         # self.shared_or_private_p_v = self.sp_discriminator(self.utt_private_v)
         self.shared_or_private_p_a = self.sp_discriminator(self.utt_private_a)
         self.shared_or_private_s = self.sp_discriminator(
-            (self.utt_shared_t + self.utt_shared_a) / 3.0)
+            (self.utt_shared_t + self.utt_shared_a) / 2.0)  # if v: 3.0
 
         # For reconstruction
         self.reconstruct()
 
-        # 1-LAYER TRANSFORMER FUSION
+        # 1-LAYER TRANSFORMER FUSION  # need to modify if v
         h = torch.stack((self.utt_private_t, self.utt_private_a, self.utt_shared_t,
                         self.utt_shared_a), dim=0)
         h = self.transformer_encoder(h)
@@ -278,7 +277,7 @@ class Model_MISA(nn.Module):
         self.utt_shared_a = self.shared(utterance_a)
 
     def forward(self, sentences, video, acoustic, lengths, bert_sent, bert_sent_type, bert_sent_mask):
-        batch_size = lengths.size(0)
+        # batch_size = lengths.size(0)
         o = self.alignment(sentences, video, acoustic, lengths, bert_sent, bert_sent_type, bert_sent_mask)
         return o
 

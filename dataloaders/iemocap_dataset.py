@@ -3,9 +3,13 @@ import os
 import pickle
 import numpy as np
 import torch
+from torch.nn.utils.rnn import pad_sequence
+from transformers import BertTokenizer
 from utils.plot import plot
 from utils.tokenize import tokenize, create_dict, sent_to_ix, pad_feature
 from torch.utils.data import Dataset
+
+bert_tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
 class Iemocap_Dataset(Dataset):
     def __init__(self, name, args, token_to_ix=None, dataroot='data'):
@@ -64,6 +68,23 @@ class Iemocap_Dataset(Dataset):
 
         y = self.key_to_label[key]
         y = np.array(y)
+
+        if self.args.model == "Model_MIST":
+            ## BERT-based features input prep
+            SENT_LEN = L.size(0)
+            # Create bert indices using tokenizer
+            bert_details = []
+            W = self.key_to_word[key]
+            text = " ".join(W)
+            encoded_bert_sent = bert_tokenizer.encode_plus(
+                text, max_length=SENT_LEN + 2, add_special_tokens=True, pad_to_max_length=True)
+            # Bert things are batch_first
+            bert_sentences = torch.LongTensor(encoded_bert_sent["input_ids"])
+            bert_sentence_types = torch.LongTensor(encoded_bert_sent["token_type_ids"])
+            bert_sentence_att_mask = torch.LongTensor(encoded_bert_sent["attention_mask"])
+            # lengths are useful later in using RNNs
+            lengths = torch.LongTensor(L.shape[0])
+            return torch.from_numpy(L), torch.from_numpy(V).float(), torch.from_numpy(A), key, torch.from_numpy(y), lengths, bert_sentences, bert_sentence_types, bert_sentence_att_mask
         return key, torch.from_numpy(L), torch.from_numpy(A), torch.from_numpy(V).float(), torch.from_numpy(y)
 
     def __len__(self):
