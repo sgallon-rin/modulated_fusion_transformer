@@ -4,7 +4,7 @@ import time
 import os
 from utils.pred_func import *
 
-# TODO: modify train for MISA
+
 def train(net, train_loader, eval_loader, args):
 
     logfile = open(

@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader
 from dataloaders import *
 from models import *
 from train import train
+from solver import Solver
 from utils.compute_args import compute_args
 
 
@@ -78,10 +79,12 @@ if __name__ == '__main__':
 
     # DataLoader
     train_dset = eval(args.dataloader)('train', args)
-    eval_dset = eval(args.dataloader)('valid', args, train_dset.token_to_ix)
+    dev_dset = eval(args.dataloader)('valid', args, train_dset.token_to_ix)
+    eval_dset = eval(args.dataloader)('test', args, train_dset.token_to_ix)
 
     train_loader = DataLoader(train_dset, args.batch_size, shuffle=True, num_workers=8, pin_memory=True)
-    eval_loader = DataLoader(eval_dset, args.batch_size, num_workers=8, pin_memory=True)
+    dev_loader = DataLoader(dev_dset, args.batch_size, shuffle=False, num_workers=8, pin_memory=True)
+    eval_loader = DataLoader(eval_dset, args.batch_size, shuffle=False, num_workers=8, pin_memory=True)
 
     # Net
     net = eval(args.model)(args, train_dset.vocab_size, train_dset.pretrained_emb).cuda()
@@ -93,6 +96,14 @@ if __name__ == '__main__':
         os.makedirs(os.path.join(args.output, args.name))
 
     # Run training
-    eval_accuracies = train(net, train_loader, eval_loader, args)
-    open('best_scores.txt', 'a+').write(args.output + "/" + args.name + ","
-                                        + str(max(eval_accuracies)) + "\n")
+    if args.model == "Model_MISA":
+        # Solver is a wrapper for model training and testing
+        solver = Solver(net, args, train_loader, dev_loader, eval_loader, is_train=True)
+        # Build the model
+        solver.build()
+        # Train the model (test scores will be returned based on dev performance)
+        solver.train()
+    else:
+        eval_accuracies = train(net, train_loader, eval_loader, args)
+        open('best_scores.txt', 'a+').write(args.output + "/" + args.name + ","
+                                            + str(max(eval_accuracies)) + "\n")

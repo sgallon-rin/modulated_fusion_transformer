@@ -20,10 +20,10 @@ class Iemocap_Dataset(Dataset):
         self.dataroot = os.path.join(dataroot, 'IEMOCAP')
         self.private_set = name == 'private'
 
-        if name == 'train':
-            name = 'traindev'
-        if name == 'valid':
-            name = 'test'
+        # if name == 'train':
+        #     name = 'traindev'
+        # if name == 'valid':
+        #     name = 'test'
 
         word_file = os.path.join(self.dataroot, name + "_sentences.p")
         audio_file = os.path.join(self.dataroot, name + "_mels.p")
@@ -69,7 +69,7 @@ class Iemocap_Dataset(Dataset):
         y = self.key_to_label[key]
         y = np.array(y)
 
-        if self.args.model == "Model_MIST":
+        if self.args.model == "Model_MISA":
             ## BERT-based features input prep
             SENT_LEN = L.size(0)
             # Create bert indices using tokenizer

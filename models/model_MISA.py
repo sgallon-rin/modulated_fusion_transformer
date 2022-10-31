@@ -35,7 +35,7 @@ class ReverseLayerF(Function):
 
 # let's define a simple model that can deal with multimodal variable length sequence
 class Model_MISA(nn.Module):
-    def __init__(self, args, vocab_size, pretrained_emb):
+    def __init__(self, args, vocab_size, pretrained_emb=None):
         super(Model_MISA, self).__init__()
 
         self.args = args
@@ -58,7 +58,7 @@ class Model_MISA(nn.Module):
             bertconfig = BertConfig.from_pretrained('bert-base-uncased', output_hidden_states=True)
             self.bertmodel = BertModel.from_pretrained('bert-base-uncased', config=bertconfig)
         else:
-            self.embed = nn.Embedding(len(args.word2id), input_sizes[0])
+            self.embed = nn.Embedding(len(vocab_size), input_sizes[0])
             self.trnn1 = rnn(input_sizes[0], hidden_sizes[0], bidirectional=True)
             self.trnn2 = rnn(2 * hidden_sizes[0], hidden_sizes[0], bidirectional=True)
 
