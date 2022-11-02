@@ -53,6 +53,8 @@ class Model_MISA(nn.Module):
         rnn = nn.LSTM  # if self.args.rnncell == "lstm" else nn.GRU
         # defining modules - two layer bidirectional LSTM with layer norm in between
 
+        self.pretrained_emb = pretrained_emb
+
         if self.args.use_bert:
             # Initializing a BERT bert-base-uncased style configuration
             bertconfig = BertConfig.from_pretrained('bert-base-uncased', output_hidden_states=True)

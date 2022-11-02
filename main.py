@@ -22,7 +22,7 @@ def str2bool(v):
 def parse_args():
     parser = argparse.ArgumentParser()
     # Model
-    parser.add_argument('--model', type=str, default="Model_MAT", choices=["Model_MAT", "Model_MNT", "Model_MIST"])
+    parser.add_argument('--model', type=str, default="Model_MAT", choices=["Model_MAT", "Model_MNT", "Model_MISA"])
     parser.add_argument('--layer', type=int, default=4)
     parser.add_argument('--hidden_size', type=int, default=512)
     parser.add_argument('--dropout_i', type=float, default=0.0)
@@ -37,6 +37,12 @@ def parse_args():
     parser.add_argument('--use_cmd_sim', type=str2bool, default=True)
     parser.add_argument('--dropout', type=float, default=0.5)
     parser.add_argument('--rnncell', type=str, default='lstm')
+    parser.add_argument('--optimizer', type=str, default='Adam')
+    parser.add_argument('--patience', type=int, default=6)
+    parser.add_argument('--diff_weight', type=float, default=0.3)
+    parser.add_argument('--sim_weight', type=float, default=1.0)
+    parser.add_argument('--recon_weight', type=float, default=1.0)
+    parser.add_argument('--clip', type=float, default=1.0)
 
     # Data
     parser.add_argument('--lang_seq_len', type=int, default=50)
@@ -46,8 +52,8 @@ def parse_args():
     parser.add_argument('--video_feat_size', type=int, default=512)
 
     # Training
-    parser.add_argument('--output', type=str, default='ckpt/')
-    parser.add_argument('--name', type=str, default='exp0/')
+    parser.add_argument('--output', type=str, default='ckpt')
+    parser.add_argument('--name', type=str, default='mymodel')
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--max_epoch', type=int, default=99)
     parser.add_argument('--lr_base', type=float, default=0.00005)

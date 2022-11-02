@@ -37,8 +37,8 @@ class Solver(object):
 
         # Initialize weight of Embedding matrix with Glove embeddings
         if not self.args.use_bert:
-            if self.args.pretrained_emb is not None:
-                self.model.embed.weight.data = self.args.pretrained_emb
+            if self.model.pretrained_emb is not None:
+                self.model.embed.weight.data = self.model.pretrained_emb
             self.model.embed.requires_grad = False
 
         if torch.cuda.is_available() and cuda:
@@ -47,7 +47,7 @@ class Solver(object):
         if self.is_train:
             self.optimizer = self.args.optimizer(
                 filter(lambda p: p.requires_grad, self.model.parameters()),
-                lr=self.args.learning_rate)
+                lr=self.args.lr_base)
 
     @time_desc_decorator('Training Start!')
     def train(self):
@@ -67,7 +67,7 @@ class Solver(object):
 
         train_losses = []
         valid_losses = []
-        for e in range(self.args.n_epoch):
+        for e in range(self.args.max_epoch):
             self.model.train()
 
             train_loss_cls, train_loss_sim, train_loss_diff = [], [], []
@@ -90,7 +90,7 @@ class Solver(object):
 
                 y_tilde = self.model(t, v, a, l, bert_sent, bert_sent_type, bert_sent_mask)
 
-                if self.args.data == "ur_funny":
+                if self.args.dataset in ["ur_funny", "IEMOCAP"]:
                     y = y.squeeze()
 
                 cls_loss = criterion(y_tilde, y)
