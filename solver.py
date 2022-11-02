@@ -12,7 +12,7 @@ from utils.functions import DiffLoss, MSE, CMD
 from utils.time_track import time_desc_decorator
 from models import Model_MISA
 
-# TODO: modify solver
+
 class Solver(object):
     def __init__(self, model, args, train_data_loader, dev_data_loader, test_data_loader, is_train=True):
 
@@ -23,7 +23,7 @@ class Solver(object):
         self.test_data_loader = test_data_loader
         self.is_train = is_train
         self.model = model
-    
+
     @time_desc_decorator('Build Graph')
     def build(self, cuda=True):
         # Final list
@@ -40,7 +40,7 @@ class Solver(object):
             if self.args.pretrained_emb is not None:
                 self.model.embed.weight.data = self.args.pretrained_emb
             self.model.embed.requires_grad = False
-        
+
         if torch.cuda.is_available() and cuda:
             self.model.cuda()
 
@@ -48,7 +48,6 @@ class Solver(object):
             self.optimizer = self.args.optimizer(
                 filter(lambda p: p.requires_grad, self.model.parameters()),
                 lr=self.args.learning_rate)
-
 
     @time_desc_decorator('Training Start!')
     def train(self):
@@ -62,10 +61,10 @@ class Solver(object):
         self.loss_diff = DiffLoss()
         self.loss_recon = MSE()
         self.loss_cmd = CMD()
-        
+
         best_valid_loss = float('inf')
         lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(self.optimizer, gamma=0.5)
-        
+
         train_losses = []
         valid_losses = []
         for e in range(self.args.n_epoch):
@@ -73,7 +72,7 @@ class Solver(object):
 
             train_loss_cls, train_loss_sim, train_loss_diff = [], [], []
             train_loss_recon = []
-            train_loss_sp = []
+            # train_loss_sp = []
             train_loss = []
             for batch in self.train_data_loader:
                 self.model.zero_grad()
@@ -90,7 +89,7 @@ class Solver(object):
                 bert_sent_mask = to_gpu(bert_sent_mask)
 
                 y_tilde = self.model(t, v, a, l, bert_sent, bert_sent_type, bert_sent_mask)
-                
+
                 if self.args.data == "ur_funny":
                     y = y.squeeze()
 
@@ -99,20 +98,21 @@ class Solver(object):
                 domain_loss = self.get_domain_loss()
                 recon_loss = self.get_recon_loss()
                 cmd_loss = self.get_cmd_loss()
-                
+
                 if self.args.use_cmd_sim:
                     similarity_loss = cmd_loss
                 else:
                     similarity_loss = domain_loss
-                
+
                 loss = cls_loss + \
                        self.args.diff_weight * diff_loss + \
                        self.args.sim_weight * similarity_loss + \
                        self.args.recon_weight * recon_loss
 
                 loss.backward()
-                
-                torch.nn.utils.clip_grad_value_([param for param in self.model.parameters() if param.requires_grad], self.args.clip)
+
+                torch.nn.utils.clip_grad_value_([param for param in self.model.parameters() if param.requires_grad],
+                                                self.args.clip)
                 self.optimizer.step()
 
                 train_loss_cls.append(cls_loss.item())
@@ -120,20 +120,20 @@ class Solver(object):
                 train_loss_recon.append(recon_loss.item())
                 train_loss.append(loss.item())
                 train_loss_sim.append(similarity_loss.item())
-                
 
             train_losses.append(train_loss)
             print(f"Training loss: {round(np.mean(train_loss), 4)}")
 
             valid_loss, valid_acc = self.eval(mode="dev")
-            
+
             print(f"Current patience: {curr_patience}, current trial: {num_trials}.")
             if valid_loss <= best_valid_loss:
                 best_valid_loss = valid_loss
                 print("Found new best model on dev set!")
-                if not os.path.exists('checkpoints'): os.makedirs('checkpoints')
-                torch.save(self.model.state_dict(), f'checkpoints/model_{self.args.name}.std')
-                torch.save(self.optimizer.state_dict(), f'checkpoints/optim_{self.args.name}.std')
+                torch.save(self.model.state_dict(),
+                           os.path.join(self.args.output, self.args.name, f'model_{self.args.name}.std'))
+                torch.save(self.optimizer.state_dict(),
+                           os.path.join(self.args.output, self.args.name, f'optim_{self.args.name}.std'))
                 curr_patience = patience
             else:
                 curr_patience -= 1
@@ -141,22 +141,21 @@ class Solver(object):
                     print("Running out of patience, loading previous best model.")
                     num_trials -= 1
                     curr_patience = patience
-                    self.model.load_state_dict(torch.load(f'checkpoints/model_{self.args.name}.std'))
-                    self.optimizer.load_state_dict(torch.load(f'checkpoints/optim_{self.args.name}.std'))
+                    self.model.load_state_dict(
+                        torch.load(os.path.join(self.args.output, self.args.name, f'model_{self.args.name}.std')))
+                    self.optimizer.load_state_dict(
+                        torch.load(os.path.join(self.args.output, self.args.name, f'optim_{self.args.name}.std')))
                     lr_scheduler.step()
                     print(f"Current learning rate: {self.optimizer.state_dict()['param_groups'][0]['lr']}")
-            
+
             if num_trials <= 0:
                 print("Running out of patience, early stopping.")
                 break
 
         self.eval(mode="test", to_print=True)
 
-
-
-    
-    def eval(self,mode=None, to_print=False):
-        assert(mode is not None)
+    def eval(self, mode=None, to_print=False):
+        assert (mode is not None)
         self.model.eval()
 
         y_true, y_pred = [], []
@@ -169,8 +168,7 @@ class Solver(object):
 
             if to_print:
                 self.model.load_state_dict(torch.load(
-                    f'checkpoints/model_{self.args.name}.std'))
-            
+                    os.path.join(self.args.output, self.args.name, f'model_{self.args.name}.std')))
 
         with torch.no_grad():
 
@@ -189,9 +187,9 @@ class Solver(object):
 
                 y_tilde = self.model(t, v, a, l, bert_sent, bert_sent_type, bert_sent_mask)
 
-                if self.args.data == "ur_funny":
+                if self.args.dataset in ["ur_funny", "IEMOCAP"]:
                     y = y.squeeze()
-                
+
                 cls_loss = self.criterion(y_tilde, y)
                 loss = cls_loss
 
@@ -222,8 +220,7 @@ class Solver(object):
         https://github.com/yaohungt/Multimodal-Transformer/blob/master/src/eval_metrics.py
         """
 
-
-        if self.args.data == "ur_funny":
+        if self.args.dataset in ["ur_funny", "IEMOCAP"]:
             test_preds = np.argmax(y_pred, 1)
             test_truth = y_true
 
@@ -233,7 +230,7 @@ class Solver(object):
                 print("Classification Report (pos/neg) :")
                 print(classification_report(test_truth, test_preds, digits=5))
                 print("Accuracy (pos/neg) ", accuracy_score(test_truth, test_preds))
-            
+
             return accuracy_score(test_truth, test_preds)
 
         else:
@@ -247,13 +244,13 @@ class Solver(object):
             test_preds_a5 = np.clip(test_preds, a_min=-2., a_max=2.)
             test_truth_a5 = np.clip(test_truth, a_min=-2., a_max=2.)
 
-            mae = np.mean(np.absolute(test_preds - test_truth))   # Average L1 distance between preds and truths
+            mae = np.mean(np.absolute(test_preds - test_truth))  # Average L1 distance between preds and truths
             corr = np.corrcoef(test_preds, test_truth)[0][1]
             mult_a7 = self.multiclass_acc(test_preds_a7, test_truth_a7)
             mult_a5 = self.multiclass_acc(test_preds_a5, test_truth_a5)
-            
+
             f_score = f1_score((test_preds[non_zeros] > 0), (test_truth[non_zeros] > 0), average='weighted')
-            
+
             # pos - neg
             binary_truth = (test_truth[non_zeros] > 0)
             binary_preds = (test_preds[non_zeros] > 0)
@@ -265,7 +262,7 @@ class Solver(object):
                 print("Classification Report (pos/neg) :")
                 print(classification_report(binary_truth, binary_preds, digits=5))
                 print("Accuracy (pos/neg) ", accuracy_score(binary_truth, binary_preds))
-            
+
             # non-neg - neg
             binary_truth = (test_truth >= 0)
             binary_preds = (test_preds >= 0)
@@ -274,24 +271,23 @@ class Solver(object):
                 print("Classification Report (non-neg/neg) :")
                 print(classification_report(binary_truth, binary_preds, digits=5))
                 print("Accuracy (non-neg/neg) ", accuracy_score(binary_truth, binary_preds))
-            
+
             return accuracy_score(binary_truth, binary_preds)
 
-
-    def get_domain_loss(self,):
+    def get_domain_loss(self, ):
 
         if self.args.use_cmd_sim:
             return 0.0
-        
+
         # Predicted domain labels
         domain_pred_t = self.model.domain_label_t
         # domain_pred_v = self.model.domain_label_v
         domain_pred_a = self.model.domain_label_a
 
         # True domain labels
-        domain_true_t = to_gpu(torch.LongTensor([0]*domain_pred_t.size(0)))
+        domain_true_t = to_gpu(torch.LongTensor([0] * domain_pred_t.size(0)))
         # domain_true_v = to_gpu(torch.LongTensor([1]*domain_pred_v.size(0)))
-        domain_true_a = to_gpu(torch.LongTensor([2]*domain_pred_a.size(0)))
+        domain_true_a = to_gpu(torch.LongTensor([2] * domain_pred_a.size(0)))
 
         # Stack up predictions and true labels
         domain_pred = torch.cat((domain_pred_t, domain_pred_a), dim=0)
@@ -301,7 +297,7 @@ class Solver(object):
 
         return self.domain_loss_criterion(domain_pred, domain_true)
 
-    def get_cmd_loss(self,):
+    def get_cmd_loss(self, ):
 
         if not self.args.use_cmd_sim:
             return 0.0
@@ -334,16 +330,11 @@ class Solver(object):
         # loss += self.loss_diff(private_t, private_v)
 
         return loss
-    
+
     def get_recon_loss(self, ):
 
         loss = self.loss_recon(self.model.utt_t_recon, self.model.utt_t_orig)
         # loss += self.loss_recon(self.model.utt_v_recon, self.model.utt_v_orig)
         loss += self.loss_recon(self.model.utt_a_recon, self.model.utt_a_orig)
-        loss = loss/2.0  # 3.0
+        loss = loss / 2.0  # 3.0
         return loss
-
-
-
-
-
