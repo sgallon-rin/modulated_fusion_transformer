@@ -37,7 +37,6 @@ def parse_args():
     parser.add_argument('--use_cmd_sim', type=str2bool, default=True)
     parser.add_argument('--dropout', type=float, default=0.5)
     parser.add_argument('--rnncell', type=str, default='lstm')
-    parser.add_argument('--optimizer', type=str, default='Adam')
     parser.add_argument('--patience', type=int, default=6)
     parser.add_argument('--diff_weight', type=float, default=0.3)
     parser.add_argument('--sim_weight', type=float, default=1.0)
@@ -93,9 +92,10 @@ if __name__ == '__main__':
     eval_loader = DataLoader(eval_dset, args.batch_size, shuffle=False, num_workers=8, pin_memory=True)
 
     # Net
-    net = eval(args.model)(args, train_dset.vocab_size, train_dset.pretrained_emb).cuda()
+    net = eval(args.model)(args, train_dset.vocab_size, train_dset.pretrained_emb)
+    if torch.cuda.is_available():
+        net = net.cuda()
     print("Total number of parameters : " + str(sum([p.numel() for p in net.parameters()]) / 1e6) + "M")
-    net = net.cuda()
 
     # Create Checkpoint dir
     if not os.path.exists(os.path.join(args.output, args.name)):

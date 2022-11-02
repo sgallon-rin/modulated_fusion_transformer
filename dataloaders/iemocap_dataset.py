@@ -71,7 +71,7 @@ class Iemocap_Dataset(Dataset):
 
         if self.args.model == "Model_MISA":
             ## BERT-based features input prep
-            SENT_LEN = L.size(0)
+            SENT_LEN = len(L)
             # Create bert indices using tokenizer
             bert_details = []
             W = self.key_to_word[key]

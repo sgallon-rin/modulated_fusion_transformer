@@ -40,11 +40,11 @@ class Model_MISA(nn.Module):
 
         self.args = args
         self.text_size = args.word_embed_size  # args.embedding_size
-        # self.visual_size = args.visual_size  # do not use visual
+        self.visual_size = 0  # do not use visual
         self.acoustic_size = args.audio_feat_size  # args.acoustic_size
 
-        self.input_sizes = input_sizes = [self.text_size, self.acoustic_size]
-        self.hidden_sizes = hidden_sizes = [int(self.text_size), int(self.acoustic_size)]
+        self.input_sizes = input_sizes = [self.text_size, self.visual_size, self.acoustic_size]
+        self.hidden_sizes = hidden_sizes = [int(self.text_size), int(self.visual_size), int(self.acoustic_size)]
         self.output_size = output_size = args.ans_size
         self.dropout_rate = dropout_rate = args.dropout
         self.activation = nn.ReLU()  # self.args.activation()

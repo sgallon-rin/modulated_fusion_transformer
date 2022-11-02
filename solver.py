@@ -24,7 +24,7 @@ class Solver(object):
         self.is_train = is_train
         self.model = model
 
-    @time_desc_decorator('Build Graph')
+    # @time_desc_decorator('Build Graph')
     def build(self, cuda=True):
         # Final list
         for name, param in self.model.named_parameters():
@@ -45,11 +45,11 @@ class Solver(object):
             self.model.cuda()
 
         if self.is_train:
-            self.optimizer = self.args.optimizer(
+            self.optimizer = torch.optim.Adam(
                 filter(lambda p: p.requires_grad, self.model.parameters()),
                 lr=self.args.lr_base)
 
-    @time_desc_decorator('Training Start!')
+    # @time_desc_decorator('Training Start!')
     def train(self):
         curr_patience = patience = self.args.patience
         num_trials = 1
