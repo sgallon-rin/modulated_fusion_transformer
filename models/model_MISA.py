@@ -67,8 +67,9 @@ class Model_MISA(nn.Module):
         # self.vrnn1 = rnn(input_sizes[1], hidden_sizes[1], bidirectional=True)
         # self.vrnn2 = rnn(2 * hidden_sizes[1], hidden_sizes[1], bidirectional=True)
 
-        self.arnn1 = rnn(input_sizes[2], hidden_sizes[2], bidirectional=True)
-        self.arnn2 = rnn(2 * hidden_sizes[2], hidden_sizes[2], bidirectional=True)
+        if not self.args.acoustic_exracted:
+            self.arnn1 = rnn(input_sizes[2], hidden_sizes[2], bidirectional=True)
+            self.arnn2 = rnn(2 * hidden_sizes[2], hidden_sizes[2], bidirectional=True)
 
         ##########################################
         # mapping modalities to same sized space
@@ -214,11 +215,14 @@ class Model_MISA(nn.Module):
         # final_h1v, final_h2v = self.extract_features(visual, lengths, self.vrnn1, self.vrnn2, self.vlayer_norm)
         # utterance_video = torch.cat((final_h1v, final_h2v), dim=2).permute(1, 0, 2).contiguous().view(batch_size, -1)
 
-        # extract features from acoustic modality
-        final_h1a, final_h2a = self.extract_features(acoustic, lengths, self.arnn1, self.arnn2, self.alayer_norm)
-        utterance_audio = torch.cat((final_h1a, final_h2a), dim=2).permute(1, 0, 2).contiguous().view(batch_size, -1)
+        if not self.args.acoustic_exracted:
+            # extract features from acoustic modality
+            final_h1a, final_h2a = self.extract_features(acoustic, lengths, self.arnn1, self.arnn2, self.alayer_norm)
+            utterance_audio = torch.cat((final_h1a, final_h2a), dim=2).permute(1, 0, 2).contiguous().view(batch_size, -1)
+        else:
+            utterance_audio = acoustic
 
-        # Shared-private encoders
+            # Shared-private encoders
         self.shared_private(utterance_text, utterance_audio)
 
         if not self.args.use_cmd_sim:

@@ -34,6 +34,7 @@ def parse_args():
     parser.add_argument('--bidirectional', type=bool, default=False)
     # MISA config
     parser.add_argument('--use_bert', type=str2bool, default=True)
+    parser.add_argument('--acoustic_extracted', type=str2bool, default=True, help="input acoustic vectors have already been extracted features")
     parser.add_argument('--use_cmd_sim', type=str2bool, default=True)
     parser.add_argument('--dropout', type=float, default=0.5)
     parser.add_argument('--rnncell', type=str, default='lstm')
