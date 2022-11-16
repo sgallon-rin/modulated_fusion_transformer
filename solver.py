@@ -83,7 +83,7 @@ class Solver(object):
                 # v = to_gpu(v)
                 a = to_gpu(a)
                 y = to_gpu(y)
-                l = to_gpu(l)
+                # l = to_gpu(l)
                 bert_sent = to_gpu(bert_sent)
                 bert_sent_type = to_gpu(bert_sent_type)
                 bert_sent_mask = to_gpu(bert_sent_mask)
