@@ -178,7 +178,7 @@ class Model_MISA(nn.Module):
 
         padded_h1, _ = pad_packed_sequence(packed_h1)
         normed_h1 = layer_norm(padded_h1)
-        packed_normed_h1 = pack_padded_sequence(normed_h1,  lengths.to("cpu"), batch_first=True)
+        packed_normed_h1 = pack_padded_sequence(normed_h1,  lengths.to("cpu"), batch_first=False)
 
         if self.args.rnncell == "lstm":
             _, (final_h2, _) = rnn2(packed_normed_h1)
