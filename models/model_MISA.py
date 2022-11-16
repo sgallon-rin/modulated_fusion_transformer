@@ -169,7 +169,7 @@ class Model_MISA(nn.Module):
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=1)
 
     def extract_features(self, sequence, lengths, rnn1, rnn2, layer_norm):
-        packed_sequence = pack_padded_sequence(sequence, lengths, batch_first=True)
+        packed_sequence = pack_padded_sequence(sequence, lengths.to("cpu"), batch_first=True)
 
         if self.args.rnncell == "lstm":
             packed_h1, (final_h1, _) = rnn1(packed_sequence)
