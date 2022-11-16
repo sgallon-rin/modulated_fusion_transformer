@@ -92,11 +92,18 @@ class Model_MISA(nn.Module):
         # self.project_v.add_module('project_v_activation', self.activation)
         # self.project_v.add_module('project_v_layer_norm', nn.LayerNorm(args.hidden_size))
 
-        self.project_a = nn.Sequential()
-        self.project_a.add_module('project_a',
-                                  nn.Linear(in_features=hidden_sizes[2] * 4, out_features=args.hidden_size))
-        self.project_a.add_module('project_a_activation', self.activation)
-        self.project_a.add_module('project_a_layer_norm', nn.LayerNorm(args.hidden_size))
+        if not self.args.acoustic_extracted:
+            self.project_a = nn.Sequential()
+            self.project_a.add_module('project_a',
+                                      nn.Linear(in_features=hidden_sizes[2] * 4, out_features=args.hidden_size))
+            self.project_a.add_module('project_a_activation', self.activation)
+            self.project_a.add_module('project_a_layer_norm', nn.LayerNorm(args.hidden_size))
+        else:
+            self.project_a = nn.Sequential()
+            self.project_a.add_module('project_a',
+                                      nn.Linear(in_features=3200, out_features=args.hidden_size))
+            self.project_a.add_module('project_a_activation', self.activation)
+            self.project_a.add_module('project_a_layer_norm', nn.LayerNorm(args.hidden_size))
 
         ##########################################
         # private encoders
@@ -220,9 +227,9 @@ class Model_MISA(nn.Module):
             final_h1a, final_h2a = self.extract_features(acoustic, lengths, self.arnn1, self.arnn2, self.alayer_norm)
             utterance_audio = torch.cat((final_h1a, final_h2a), dim=2).permute(1, 0, 2).contiguous().view(batch_size, -1)
         else:
-            utterance_audio = acoustic
+            utterance_audio = acoustic.view(batch_size, -1)
 
-            # Shared-private encoders
+        # Shared-private encoders
         self.shared_private(utterance_text, utterance_audio)
 
         if not self.args.use_cmd_sim:
