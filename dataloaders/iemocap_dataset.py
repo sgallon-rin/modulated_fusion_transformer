@@ -79,12 +79,12 @@ class Iemocap_Dataset(Dataset):
             encoded_bert_sent = bert_tokenizer.encode_plus(
                 text, max_length=SENT_LEN + 2, add_special_tokens=True, pad_to_max_length=True)
             # Bert things are batch_first
-            bert_sentences = torch.LongTensor(encoded_bert_sent["input_ids"])
-            bert_sentence_types = torch.LongTensor(encoded_bert_sent["token_type_ids"])
+            bert_sentence = torch.LongTensor(encoded_bert_sent["input_ids"])
+            bert_sentence_type = torch.LongTensor(encoded_bert_sent["token_type_ids"])
             bert_sentence_att_mask = torch.LongTensor(encoded_bert_sent["attention_mask"])
             # lengths are useful later in using RNNs
-            lengths = torch.zeros(L.shape[0], dtype=torch.int64)
-            return torch.from_numpy(L), torch.from_numpy(V).float(), torch.from_numpy(A), torch.from_numpy(y), lengths, bert_sentences, bert_sentence_types, bert_sentence_att_mask
+            length = L.shape[0]
+            return torch.from_numpy(L), torch.from_numpy(V).float(), torch.from_numpy(A), torch.from_numpy(y), length, bert_sentence, bert_sentence_type, bert_sentence_att_mask
         return key, torch.from_numpy(L), torch.from_numpy(A), torch.from_numpy(V).float(), torch.from_numpy(y)
 
     def __len__(self):
