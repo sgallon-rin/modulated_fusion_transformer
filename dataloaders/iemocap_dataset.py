@@ -83,7 +83,7 @@ class Iemocap_Dataset(Dataset):
             bert_sentence_types = torch.LongTensor(encoded_bert_sent["token_type_ids"])
             bert_sentence_att_mask = torch.LongTensor(encoded_bert_sent["attention_mask"])
             # lengths are useful later in using RNNs
-            lengths = torch.LongTensor(L.shape[0])
+            lengths = torch.LongTensor(L.shape[0], dtype=torch.int64)
             return torch.from_numpy(L), torch.from_numpy(V).float(), torch.from_numpy(A), torch.from_numpy(y), lengths, bert_sentences, bert_sentence_types, bert_sentence_att_mask
         return key, torch.from_numpy(L), torch.from_numpy(A), torch.from_numpy(V).float(), torch.from_numpy(y)
 
