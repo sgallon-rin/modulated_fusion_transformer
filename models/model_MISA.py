@@ -67,7 +67,7 @@ class Model_MISA(nn.Module):
         # self.vrnn1 = rnn(input_sizes[1], hidden_sizes[1], bidirectional=True)
         # self.vrnn2 = rnn(2 * hidden_sizes[1], hidden_sizes[1], bidirectional=True)
 
-        if not self.args.acoustic_exracted:
+        if not self.args.acoustic_extracted:
             self.arnn1 = rnn(input_sizes[2], hidden_sizes[2], bidirectional=True)
             self.arnn2 = rnn(2 * hidden_sizes[2], hidden_sizes[2], bidirectional=True)
 
