@@ -62,7 +62,7 @@ def parse_args():
     parser.add_argument('--grad_norm_clip', type=float, default=-1)
     parser.add_argument('--eval_start', type=int, default=0)
     parser.add_argument('--early_stop', type=int, default=3)
-    parser.add_argument('--seed', type=int, default=random.randint(0, 9999999))
+    parser.add_argument('--seed', type=int, default=2333)
 
     # Dataset and task
     parser.add_argument('--dataset', type=str, choices=['MELD', 'MOSEI', 'MOSI', 'IEMOCAP', 'VGAF'], default='MOSEI')
